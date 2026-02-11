@@ -1,0 +1,9 @@
+Conventional Commits references:
+- https://www.conventionalcommits.org/en/v1.0.0/
+- https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13
+
+Key points:
+- Format: <type>[optional scope]: <description>
+- Description is present tense, lowercase verb, no trailing period.
+- Common types: feat, fix, docs, style, refactor, perf, test, chore, ci, build.
+- Breaking changes: add ! after type/scope or use BREAKING CHANGE: footer.
