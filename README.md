@@ -72,7 +72,9 @@ All scripts auto-detect terminal width and switch between:
 
 ## Documentation
 
+- [`doc/tr181-logical.md`](doc/tr181-logical.md) — TR-181 Logical interface stack overview
 - [`doc/tr181-fw.md`](doc/tr181-fw.md) — TR-181 Firewall object hierarchy and chain selection mechanism
+- [`doc/tr181-wan-manager.md`](doc/tr181-wan-manager.md) — TR-181 WAN Manager modes and interfaces
 
 ## References
 
