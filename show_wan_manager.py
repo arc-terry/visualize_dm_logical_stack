@@ -46,6 +46,26 @@ def get_attr(dm, prefix, attr):
     return None
 
 
+def resolve_alias(dm, ref):
+    """Resolve a Device.* reference to its Alias or Name."""
+    if not ref:
+        return ''
+    path = ref.rstrip('.')
+    alias = get_attr(dm, path, 'Alias') or get_attr(dm, path, 'Name') or ''
+    return alias
+
+
+def ref_label(dm, ref):
+    """Return 'Short.Path (alias)' or 'Short.Path' for a reference."""
+    short = shorten_ref(ref)
+    if short == '-':
+        return '-'
+    alias = resolve_alias(dm, ref)
+    if alias:
+        return f'{short} ({alias})'
+    return short
+
+
 def hline(char, width, left='', right=''):
     inner = width - len(left) - len(right)
     return f'{left}{char * inner}{right}'
@@ -134,7 +154,7 @@ def print_overview(dm, width):
     print()
 
 
-def print_wan_compact(wan_id, mode, intfs, width, is_active):
+def print_wan_compact(dm, wan_id, mode, intfs, width, is_active):
     """Print WAN mode in compact card layout."""
     st = '🟢' if mode['status'] != 'Disabled' else '🔴'
     sense = '📡' if mode['sensing'] == '1' else '  '
@@ -162,13 +182,13 @@ def print_wan_compact(wan_id, mode, intfs, width, is_active):
             print(boxline(line, width))
             refs = []
             if intf['ipv4_ref']:
-                refs.append(f'IPv4→{shorten_ref(intf["ipv4_ref"])}')
+                refs.append(f'IPv4→{ref_label(dm, intf["ipv4_ref"])}')
             if intf['dhcpv4_ref']:
-                refs.append(f'DHCPv4→{shorten_ref(intf["dhcpv4_ref"])}')
+                refs.append(f'DHCPv4→{ref_label(dm, intf["dhcpv4_ref"])}')
             if intf['dhcpv6_ref']:
-                refs.append(f'DHCPv6→{shorten_ref(intf["dhcpv6_ref"])}')
+                refs.append(f'DHCPv6→{ref_label(dm, intf["dhcpv6_ref"])}')
             if intf['default_route']:
-                refs.append(f'Route→{shorten_ref(intf["default_route"])}')
+                refs.append(f'Route→{ref_label(dm, intf["default_route"])}')
             if refs:
                 print(boxline(f'  {" | ".join(refs)}', width))
 
@@ -176,7 +196,7 @@ def print_wan_compact(wan_id, mode, intfs, width, is_active):
     print()
 
 
-def print_wan_wide(wan_id, mode, intfs, width, is_active):
+def print_wan_wide(dm, wan_id, mode, intfs, width, is_active):
     """Print WAN mode in wide table layout."""
     st = '🟢' if mode['status'] != 'Disabled' else '🔴'
     sense = '📡' if mode['sensing'] == '1' else '  '
@@ -199,7 +219,7 @@ def print_wan_wide(wan_id, mode, intfs, width, is_active):
         c_v6mode = 10
         c_type = 10
         c_vlan = 6
-        c_v4ref = 20
+        c_v4ref = 28
         c_route = max(10, width - c_id - c_alias - c_v4mode - c_v6mode - c_type - c_vlan - c_v4ref - 12)
 
         hdr = (f'{"Intf":<{c_id}} {"Alias":<{c_alias}} {"IPv4Mode":<{c_v4mode}} '
@@ -218,19 +238,19 @@ def print_wan_wide(wan_id, mode, intfs, width, is_active):
                     f'{intf["ipv4_mode"]:<{c_v4mode}} '
                     f'{intf["ipv6_mode"]:<{c_v6mode}} '
                     f'{intf["type"]:<{c_type}} {vlan:<{c_vlan}} '
-                    f'{shorten_ref(intf["ipv4_ref"]):<{c_v4ref}} '
-                    f'{shorten_ref(intf["default_route"]):<{c_route}}')
+                    f'{ref_label(dm, intf["ipv4_ref"]):<{c_v4ref}} '
+                    f'{ref_label(dm, intf["default_route"]):<{c_route}}')
             print(boxline(line, width))
 
     print(hline('─', width, '└', '┘'))
     print()
 
 
-def print_wan_mode(wan_id, mode, intfs, width, is_active):
+def print_wan_mode(dm, wan_id, mode, intfs, width, is_active):
     if width < 90:
-        print_wan_compact(wan_id, mode, intfs, width, is_active)
+        print_wan_compact(dm, wan_id, mode, intfs, width, is_active)
     else:
-        print_wan_wide(wan_id, mode, intfs, width, is_active)
+        print_wan_wide(dm, wan_id, mode, intfs, width, is_active)
 
 
 def main():
@@ -253,7 +273,7 @@ def main():
     for wid in sorted(modes.keys()):
         intfs = discover_intfs(dm, wid)
         is_active = (modes[wid]['alias'] == active_mode)
-        print_wan_mode(wid, modes[wid], intfs, width, is_active)
+        print_wan_mode(dm, wid, modes[wid], intfs, width, is_active)
 
     # Summary table
     print(hline('═', width))
